@@ -1,0 +1,69 @@
+﻿namespace JIRAMigration.Classes
+{
+    public class Names
+    {
+        public string issuetype { get; set; }
+        public string timespent { get; set; }
+        public string project { get; set; }
+        public string fixVersions { get; set; }
+        public string customfield_11200 { get; set; }
+        public string aggregatetimespent { get; set; }
+        public string resolution { get; set; }
+        public string customfield_11401 { get; set; }
+        public string customfield_11400 { get; set; }
+        public string customfield_10503 { get; set; }
+        public string resolutiondate { get; set; }
+        public string workratio { get; set; }
+        public string lastViewed { get; set; }
+        public string watches { get; set; }
+        public string created { get; set; }
+        public string priority { get; set; }
+        public string customfield_10102 { get; set; }
+        public string labels { get; set; }
+        public string timeestimate { get; set; }
+        public string aggregatetimeoriginalestimate { get; set; }
+        public string versions { get; set; }
+        public string issuelinks { get; set; }
+        public string assignee { get; set; }
+        public string updated { get; set; }
+        public string status { get; set; }
+        public string components { get; set; }
+        public string timeoriginalestimate { get; set; }
+        public string description { get; set; }
+        public string customfield_11300 { get; set; }
+        public string customfield_11500 { get; set; }
+        public string timetracking { get; set; }
+        public string customfield_10005 { get; set; }
+        public string customfield_10203 { get; set; }
+        public string customfield_10204 { get; set; }
+        public string customfield_10006 { get; set; }
+        public string customfield_10600 { get; set; }
+        public string customfield_10205 { get; set; }
+        public string customfield_10601 { get; set; }
+        public string customfield_10007 { get; set; }
+        public string customfield_10800 { get; set; }
+        public string customfield_10008 { get; set; }
+        public string attachment { get; set; }
+        public string customfield_10009 { get; set; }
+        public string aggregatetimeestimate { get; set; }
+        public string summary { get; set; }
+        public string creator { get; set; }
+        public string subtasks { get; set; }
+        public string reporter { get; set; }
+        public string customfield_10000 { get; set; }
+        public string aggregateprogress { get; set; }
+        public string customfield_10001 { get; set; }
+        public string customfield_10200 { get; set; }
+        public string customfield_10002 { get; set; }
+        public string customfield_10003 { get; set; }
+        public string customfield_10201 { get; set; }
+        public string customfield_10202 { get; set; }
+        public string customfield_10004 { get; set; }
+        public string environment { get; set; }
+        public string duedate { get; set; }
+        public string progress { get; set; }
+        public string comment { get; set; }
+        public string votes { get; set; }
+        public string worklog { get; set; } 
+    }
+}
