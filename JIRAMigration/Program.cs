@@ -21,58 +21,66 @@ namespace JIRAMigration
 {
     class Program
     {
-        private const string userName = "diego.medici";
-        private const string password = "S4r4eCr1st1n4";
+        private const string UserName = "diego.medici";
+        private const string Password = "S4r4eCr1st1n4";
+        private const string Projects = "ATT,ESTAT,GIANO,LRX,SWAT,ZEN";
+        private const string DestProject = "SWAT";
 
         static void Main(string[] args)
         {
 
             try
             {
-               
+                JiraClient jiraClient = new JiraClient("https://studiofarma.atlassian.net", UserName, Password);
 
-                JiraClient jiraClient = new JiraClient("https://studiofarma.atlassian.net", userName, password);
-                IEnumerable<Issue> issues = jiraClient.GetIssues("ATT");
+                string[] elencoProject = Projects.Split(',');
+                ListIssueCGM issueCgms = new ListIssueCGM();
 
-                List<IssueCGM> issueCgms = new List<IssueCGM>(issues.Count());
-
-                foreach (var locIssue in issues)
+                foreach (var project in elencoProject)
                 {
 
-                    IssueSTF issueStf = GetIssueSTF(locIssue.self);
+                    IEnumerable<Issue> issues = jiraClient.GetIssues(project).OrderBy(k => k, new MyComparer()).ToList();
 
-                    //Issue issue = jiraClient.LoadIssue(locIssue);
+                    foreach (var locIssue in issues)
+                    {
+                        IssueSTF issueStf = GetIssueSTF(locIssue.self);
 
-                    //Console.WriteLine("{0} - {1}", issue.key, issue.fields.summary);
+                        IssueCGM issueCgm = new IssueCGM(issueStf, project, DestProject);
 
-                    IssueCGM issueCgm = new IssueCGM(issueStf);
-                    issueCgms.Add(issueCgm);
+                        issueCgms.Add(issueCgm);
 
+                        Console.WriteLine(issueCgm.OriginalIssueKey);
 
-                    //var fields = issue.fields;
-                    //IEnumerable<Comment> issueComments = issue.fields. .GetComments(issue);
-                    //IEnumerable<Attachment> issueAttachments = jiraClient.GetAttachments(issue);
-                    //IEnumerable<IssueLink> issueLinks = jiraClient.GetIssueLinks(issue);
-                    //IEnumerable<RemoteLink> issueRemoteLinks = jiraClient.GetRemoteLinks(issue);
-                    //IEnumerable<Transition> issueTransitions = jiraClient.GetTransitions(issue);
+                    }
 
-                    //foreach (var issueAttachment in issue.fields.attachment)
-                    //{
-                    //    Attachment attach = GetAttach(issueAttachment.self);
-                    //    Console.WriteLine(" - Create {0} - Author {1} - Filename {2}", attach.created, attach.author.key, attach.filename);
-                    //    //string fileUri = string.Empty;
-                    //    //string url = string.Format("{0}?&os_username={1}&os_password={2}", fileUri, userName, password);
-                    //    //webClient.DownloadFile(new Uri( fileUri + "?&os_username=usernamehere&os_password=passwordhere"), issueAttachment.filename);
-                    //}
-
-                    //foreach (var issueComment in issue.fields.comments)
-                    //{
-                    //    Comment2 comment2 = GetComment(issue.self, issueComment.id);
-                    //    Console.WriteLine(" - Create {0} - Author {1} - Comment {2}", comment2.created, comment2.author.emailAddress, comment2.body);
-                    //}
-
-                    
+                    foreach(IssueCGM issue in IssueCGM.IssueToDo)
+                    {
+                        if (IssueCGM.Maps.ContainsKey(issue.OriginalParentIssueKey))
+                        {
+                            issue.DestinationParentIssueKey = IssueCGM.Maps[issue.OriginalParentIssueKey];
+                        }
+                    }
                 }
+
+                //if (args[0] != null && !string.IsNullOrEmpty(args[0]))
+                //{
+                //    Issue issue = issues.SingleOrDefault(j => j.key == args[0]);
+                //    IssueSTF issueStf = GetIssueSTF(issue.self);
+                //}
+               
+
+                string[] lines = new string[issueCgms.Count + 1];
+                lines[0] = issueCgms.FirstLine();
+                int i = 1;
+                foreach (IssueCGM issueCgm in issueCgms)
+                {
+                    lines[i++] = issueCgm.ToCSV(issueCgms.MaxCountLabel(), issueCgms.MaxCountAffcectVersion(),
+                        issueCgms.MaxCountComponent(), issueCgms.MaxCountFixVersion(), issueCgms.MaxCountComments(), issueCgms.MaxCountAttachments());
+                }
+                const string nameFileCsv = @"C:\CGM\" + DestProject + ".csv";
+                Console.WriteLine("Writing file {0}", nameFileCsv);
+                File.WriteAllLines(nameFileCsv, lines);
+                Console.WriteLine("Done!");
             }
             catch (Exception e)
             {
@@ -87,7 +95,7 @@ namespace JIRAMigration
         public static CommentDetail GetComment(string self, string id)
         {
             string url = string.Format("{0}/comment/{1}?&os_username={2}&os_password={3}&expand=names,renderedFields",
-                self, id, userName, password);
+                self, id, UserName, Password);
             CommentDetail commentDetail;
 
                 using (WebClient client = new WebClient())
@@ -102,7 +110,7 @@ namespace JIRAMigration
         public static Attachment GetAttach(string self)
         {
             string url = string.Format("{0}?os_username={1}&os_password={2}",
-                self, userName, password);
+                self, UserName, Password);
             Attachment attach;
 
             using (WebClient client = new WebClient())
@@ -118,11 +126,12 @@ namespace JIRAMigration
         {
             //string url = string.Format("{0}?os_username={1}&os_password={2}&expand=renderedFields,names",
             string url = string.Format("{0}?os_username={1}&os_password={2}",
-                self, userName, password);
+                self, UserName, Password);
             IssueSTF issue;
 
             using (WebClient client = new WebClient())
             {
+                client.Encoding = Encoding.UTF8;
                 string json = client.DownloadString(url);
                 issue = JsonConvert.DeserializeObject<IssueSTF>(json);
             }
@@ -134,4 +143,8 @@ namespace JIRAMigration
 
         
     }
+
+   
 }
+
+

@@ -6,7 +6,8 @@ namespace JIRAMigration.Classes
     public class Fields
     {
         public Issuetype issuetype { get; set; }
-        public Timetracking timespent { get; set; }
+        public Parent parent { get; set; }
+        public int? timespent { get; set; }
         public Project project { get; set; }
         public List<Version> fixVersions { get; set; }
         public string customfield_11200 { get; set; }
@@ -14,9 +15,11 @@ namespace JIRAMigration.Classes
         public object resolution { get; set; }
         public object customfield_11401 { get; set; }
         public object customfield_11400 { get; set; }
-        public object customfield_10503 { get; set; }
+        public string customfield_11000 { get; set; } //Change Log
+        public string customfield_10503 { get; set; } //Acceptance Criteria
+        public CustomProject customfield_11100 { get; set; } //Project only 4 SWAT
         public object resolutiondate { get; set; }
-        public int workratio { get; set; }
+        public string workratio { get; set; }
         public string lastViewed { get; set; }
         public Watches watches { get; set; }
         public string created { get; set; }

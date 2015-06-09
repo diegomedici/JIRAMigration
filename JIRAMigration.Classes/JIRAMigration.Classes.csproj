@@ -55,13 +55,17 @@
     <Compile Include="Component.cs" />
     <Compile Include="CostUnit.cs" />
     <Compile Include="Creator.cs" />
+    <Compile Include="CustomProject.cs" />
+    <Compile Include="Export\AttachCgm.cs" />
     <Compile Include="Export\CommentCgm.cs" />
     <Compile Include="Export\IssueCGM.cs" />
+    <Compile Include="Export\ListIssueCGM.cs" />
     <Compile Include="Export\Version.cs" />
     <Compile Include="Fields.cs" />
     <Compile Include="Issue.cs" />
     <Compile Include="Issuetype.cs" />
     <Compile Include="Names.cs" />
+    <Compile Include="Parent.cs" />
     <Compile Include="Priority.cs" />
     <Compile Include="Progress.cs" />
     <Compile Include="Project.cs" />
