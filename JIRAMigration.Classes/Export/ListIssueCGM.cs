@@ -63,8 +63,8 @@ namespace JIRAMigration.Classes.Export
             }
             str.Append("Assignee;");
             str.Append("Descripton;");
-            str.Append("Acceptance Criteria;");
-            str.Append("ChangeLog Abstract;");
+            //str.Append("Acceptance Criteria;");
+            str.Append("Public Release Note;");
             str.Append("Cost Unit;");
             str.Append("Priority;");
             str.Append("Epic Name;");

@@ -14,6 +14,18 @@ namespace JIRAMigration.Classes.Export
         public static Dictionary<string, string> Maps = new Dictionary<string, string>();
         public static List<IssueCGM> IssueToDo = new List<IssueCGM>();
 
+        private static Dictionary<string, string> StatusDictionary = new Dictionary<string, string>()
+        {
+            {"Backlog", "Open"},
+            {"Ready", "Selected"},
+            {"In Progress", "In Progress"},
+            {"Acceptance", "In Progress"},
+            {"Accepted", "Close"},
+            {"Development done", "In Review"},
+            {"Closed", "Closed"},
+            {"Graveyard", "Graveyard"}
+        };
+
         private string GetNextCounter()
         {
             Counter++;
@@ -51,7 +63,7 @@ namespace JIRAMigration.Classes.Export
             IssueType = issue.fields.issuetype.name;
             if (issue.fields.reporter != null)
             {
-                Reporter = issue.fields.reporter.emailAddress.Replace("@studiofarma.it", "@cgm.it");
+                Reporter = issue.fields.reporter.emailAddress.Replace("@studiofarma.it", "@cgm.com");
             }
             DateCreated = issue.fields.created;
             Summary = issue.fields.summary.Replace(projectWithDash, destProjectWithDash);
@@ -67,7 +79,7 @@ namespace JIRAMigration.Classes.Export
             }
 
             if (issue.fields.assignee != null)
-                Assignee = issue.fields.assignee.emailAddress.Replace("@studiofarma.it", "@cgm.it");
+                Assignee = issue.fields.assignee.emailAddress.Replace("@studiofarma.it", "@cgm.com");
 
             if (issue.fields.description != null)
             {
@@ -118,6 +130,17 @@ namespace JIRAMigration.Classes.Export
             oldLink.Body = "Link issue originale su JIRA Studiofarma: https://studiofarma.atlassian.net/browse/" + OriginalIssueKey;
             CommentsBody.Add(oldLink);
 
+
+            if (!string.IsNullOrEmpty(AcceptanceCriteria))
+            {
+                CommentCgm acceptCriteria = new CommentCgm();
+                acceptCriteria.Author = Reporter;
+                acceptCriteria.Created = DateTime.Now.ToString("yyyy-MM-ddThh:mm:ss+0000");
+                acceptCriteria.Body = "AcceptanceCriteria\\r\\n" + AcceptanceCriteria;
+                CommentsBody.Add(acceptCriteria);
+            }
+          
+
             if (issue.fields.comment.comments != null)
             {
                 foreach (CommentDetail commentDetail in issue.fields.comment.comments)
@@ -133,14 +156,24 @@ namespace JIRAMigration.Classes.Export
                     var fullPathDesintationName = CopyFile(project, destProject, attach);
                     if (!string.IsNullOrEmpty(fullPathDesintationName))
                     {
-                        Attachments.Add(fullPathDesintationName);                        
+                        Attachments.Add(fullPathDesintationName.Replace(DestinationDir, ""));                        
                     }
                 }
             }
 
-            Status = issue.fields.status.name;
+            try
+            {
+                Status = StatusDictionary[issue.fields.status.name];
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Status key not found: " + issue.fields.status.name);
+            }
+            
 
         }
+
+        public const string DestinationDir = @"C:\CGM\attachments\";
 
         private string CopyFile(string project, string destProject, Attachment attach)
         {
@@ -155,7 +188,7 @@ namespace JIRAMigration.Classes.Export
             {
                 return null;
             }
-            string fullPathDesintationName = @"C:\CGM\attachments\" + destProject + @"\" + DestinationIssueKey;
+            string fullPathDesintationName = DestinationDir + destProject + @"\" + DestinationIssueKey;
             DirectoryInfo directoryDest = new DirectoryInfo(fullPathDesintationName);
             if (!directoryDest.Exists)
             {
@@ -205,7 +238,7 @@ namespace JIRAMigration.Classes.Export
             str.Append(string.Format("\"{0}\";", Assignee));
             //str.Append(string.Format("\"{0}\";", Descripton.Replace("\r\n", "$")));
             str.Append(string.Format("\"{0}\";", Descripton));
-            str.Append(string.Format("\"{0}\";", AcceptanceCriteria));
+            //str.Append(string.Format("\"{0}\";", AcceptanceCriteria));
             str.Append(string.Format("\"{0}\";", ChangeLog));
             str.Append(string.Format("\"{0}\";", CostUnit));
             str.Append(string.Format("\"{0}\";", Priority));

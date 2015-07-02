@@ -23,6 +23,7 @@ namespace JIRAMigration
     {
         private const string UserName = "diego.medici";
         private const string Password = "S4r4eCr1st1n4";
+        //private const string Projects = "WEBDPC";
         private const string Projects = "ATT,ESTAT,GIANO,LRX,SWAT,ZEN";
         private const string DestProject = "SWAT";
 
