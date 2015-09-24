@@ -12,7 +12,7 @@ namespace JIRAMigration.Classes
         public List<Version> fixVersions { get; set; }
         public string customfield_11200 { get; set; }
         public object aggregatetimespent { get; set; }
-        public object resolution { get; set; }
+        public Resolution resolution { get; set; }
         public object customfield_11401 { get; set; }
         public object customfield_11400 { get; set; }
         public string customfield_11000 { get; set; } //Change Log

@@ -22,17 +22,26 @@ namespace JIRAMigration
     class Program
     {
         private const string UserName = "diego.medici";
-        private const string Password = "S4r4eCr1st1n4";
-        //private const string Projects = "WEBDPC";
-        private const string Projects = "ATT,ESTAT,GIANO,LRX,SWAT,ZEN";
-        private const string DestProject = "SWAT";
+        private static string _password = string.Empty;
+        private const string Projects = "WEBDPC";
+        private const string DestProject = "DPC";
+
+        //private const string Projects = "ATT";
+        //private const string DestProject = "ATT";
+
+        //private const string Projects = "ATT,ESTAT,GIANO,LRX,SWAT,ZEN";
+        //private const string DestProject = "SWAT";
 
         static void Main(string[] args)
         {
 
             try
             {
-                JiraClient jiraClient = new JiraClient("https://studiofarma.atlassian.net", UserName, Password);
+                Console.WriteLine("User: diego.medici");
+                Console.Write("Password: ");
+                _password = ReadLineMasked('*');
+
+                JiraClient jiraClient = new JiraClient("https://studiofarma.atlassian.net", UserName, _password);
 
                 string[] elencoProject = Projects.Split(',');
                 ListIssueCGM issueCgms = new ListIssueCGM();
@@ -44,13 +53,14 @@ namespace JIRAMigration
 
                     foreach (var locIssue in issues)
                     {
-                        IssueSTF issueStf = GetIssueSTF(locIssue.self);
+                         IssueSTF issueStf = GetIssueSTF(locIssue.self);
 
+                        Console.Write("Reading {0}...", issueStf.key);
                         IssueCGM issueCgm = new IssueCGM(issueStf, project, DestProject);
 
                         issueCgms.Add(issueCgm);
 
-                        Console.WriteLine(issueCgm.OriginalIssueKey);
+                        Console.WriteLine(" done!");
 
                     }
 
@@ -96,7 +106,7 @@ namespace JIRAMigration
         public static CommentDetail GetComment(string self, string id)
         {
             string url = string.Format("{0}/comment/{1}?&os_username={2}&os_password={3}&expand=names,renderedFields",
-                self, id, UserName, Password);
+                self, id, UserName, _password);
             CommentDetail commentDetail;
 
                 using (WebClient client = new WebClient())
@@ -111,7 +121,7 @@ namespace JIRAMigration
         public static Attachment GetAttach(string self)
         {
             string url = string.Format("{0}?os_username={1}&os_password={2}",
-                self, UserName, Password);
+                self, UserName, _password);
             Attachment attach;
 
             using (WebClient client = new WebClient())
@@ -127,7 +137,7 @@ namespace JIRAMigration
         {
             //string url = string.Format("{0}?os_username={1}&os_password={2}&expand=renderedFields,names",
             string url = string.Format("{0}?os_username={1}&os_password={2}",
-                self, UserName, Password);
+                self, UserName, _password);
             IssueSTF issue;
 
             using (WebClient client = new WebClient())
@@ -139,7 +149,33 @@ namespace JIRAMigration
             return issue;
         }
 
+        public static string ReadLineMasked(char mask = '*')
+        {
+            var sb = new StringBuilder();
+            ConsoleKeyInfo keyInfo;
+            while ((keyInfo = Console.ReadKey(true)).Key != ConsoleKey.Enter)
+            {
+                if (!char.IsControl(keyInfo.KeyChar))
+                {
+                    sb.Append(keyInfo.KeyChar);
+                    Console.Write(mask);
+                }
+                else if (keyInfo.Key == ConsoleKey.Backspace && sb.Length > 0)
+                {
+                    sb.Remove(sb.Length - 1, 1);
 
+                    if (Console.CursorLeft == 0)
+                    {
+                        Console.SetCursorPosition(Console.BufferWidth - 1, Console.CursorTop - 1);
+                        Console.Write(' ');
+                        Console.SetCursorPosition(Console.BufferWidth - 1, Console.CursorTop - 1);
+                    }
+                    else Console.Write("\b \b");
+                }
+            }
+            Console.WriteLine();
+            return sb.ToString();
+        }
 
 
         

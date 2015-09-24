@@ -5,7 +5,7 @@
         public CommentCgm(CommentDetail commentDetail, string projectWithDash, string destProjectWithDash)
         {
             Body = commentDetail.body.Replace(projectWithDash, destProjectWithDash);
-            Author = commentDetail.author.emailAddress.Replace("@studiofarma.it", "@cgm.com");
+            Author = commentDetail.author.emailAddress; //.Replace("@studiofarma.it", "@cgm.com");
             Created = commentDetail.created;
         }
 

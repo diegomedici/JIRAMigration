@@ -81,6 +81,7 @@ namespace JIRAMigration.Classes.Export
                 str.Append("Fix Version;");
             }
             str.Append("Status;");
+            str.Append("Resolution;");
 
             for (int i = 0; i < MaxCountComments(); i++)
             {

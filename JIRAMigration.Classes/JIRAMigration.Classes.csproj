@@ -74,6 +74,7 @@
     <Compile Include="CommentDetail.cs" />
     <Compile Include="RenderedFields.cs" />
     <Compile Include="Reporter.cs" />
+    <Compile Include="Resolution.cs" />
     <Compile Include="Status.cs" />
     <Compile Include="StatusCategory.cs" />
     <Compile Include="Timetracking.cs" />
