@@ -68,6 +68,7 @@ namespace JIRAMigration.Classes.Export
             str.Append("Cost Unit;");
             str.Append("Priority;");
             str.Append("Epic Name;");
+            str.Append("Epic Link;");
             for (int i = 0; i < MaxCountAffcectVersion(); i++)
             {
                 str.Append("Affects Version;");

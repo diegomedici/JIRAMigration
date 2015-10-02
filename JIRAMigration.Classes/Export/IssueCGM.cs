@@ -11,7 +11,9 @@ namespace JIRAMigration.Classes.Export
     {
         public static int Counter = 0;
         public static Dictionary<string, string> Maps = new Dictionary<string, string>();
+        public static Dictionary<string, string> MapsEpics = new Dictionary<string, string>();
         public static List<IssueCGM> IssueToDo = new List<IssueCGM>();
+        public static List<IssueCGM> EpicsToLink = new List<IssueCGM>();
 
         private static Dictionary<string, string> StatusDictionary = new Dictionary<string, string>()
         {
@@ -19,7 +21,7 @@ namespace JIRAMigration.Classes.Export
             {"Ready", "Selected"},
             {"In Progress", "In Progress"},
             {"Acceptance", "In Progress"},
-            {"Accepted", "Close"},
+            {"Accepted", "Closed"},
             {"Development done", "In Review"},
             {"Closed", "Closed"},
             {"Graveyard", "Closed"}
@@ -56,6 +58,19 @@ namespace JIRAMigration.Classes.Export
                 else
                 {
                     IssueToDo.Add(this);
+                }
+            }
+
+            if (issue.fields.customfield_10800 != null)
+            {
+                EpicLinkKey = issue.fields.customfield_10800.ToString();
+                if (MapsEpics.ContainsKey(EpicLinkKey))
+                {
+                    EpicLink = MapsEpics[EpicLinkKey];
+                }
+                else
+                {
+                    EpicsToLink.Add(this);
                 }
             }
 
@@ -99,7 +114,13 @@ namespace JIRAMigration.Classes.Export
             {
                 Priority = issue.fields.priority.name;
             }
+
             EpicName = issue.fields.customfield_10801;
+            if (!string.IsNullOrEmpty(EpicName))
+            {
+                MapsEpics.Add(OriginalIssueKey, EpicName);
+            }
+
             AcceptanceCriteria = issue.fields.customfield_10503;
             ChangeLog = issue.fields.customfield_11000;
             Resolution = issue.fields.resolution == null ? "Unresolved" : issue.fields.resolution.name;
@@ -173,32 +194,32 @@ namespace JIRAMigration.Classes.Export
             {
                 Console.WriteLine("Status key not found: " + issue.fields.status.name);
             }
-
-            Console.Write("{0} {1} -> {2} ", Resolution, issue.fields.status.name, Status);
-
+            Console.WriteLine("{0} -> {1} Res: {2} Status: {3} -> {4} ", issue.key, DestinationIssueKey, Resolution, issue.fields.status.name, Status);
         }
 
         private string EmailChanger(string emailAddress, string type)
         {
             string[] oldEmails = { "federico.rota@studiofarma.it", "nicola.febbrari@studiofarma.it", "gabriele.bonzi@studiofarma.it" };
-            string newEmail;// = string.Empty;
-            if (oldEmails.Any(oldEmail => oldEmail.Equals(emailAddress)))
+            string newEmail = string.Empty;
+            if (emailAddress != null)
             {
-                newEmail = "diego.medici@cgm.com";
-                if(!string.IsNullOrEmpty(type))
+                if (oldEmails.Any(oldEmail => oldEmail.Equals(emailAddress)))
                 {
-                    CommentCgm oldLink = new CommentCgm();
-                    oldLink.Author = "diego.medici@cgm.com";
-                    oldLink.Created = DateTime.Now.ToString("yyyy-MM-ddThh:mm:ss+0000");
-                    oldLink.Body = string.Format("Original {0} {1}", type, emailAddress);
-                    CommentsBody.Add(oldLink);
+                    newEmail = "diego.medici@cgm.com";
+                    if (!string.IsNullOrEmpty(type))
+                    {
+                        CommentCgm oldLink = new CommentCgm();
+                        oldLink.Author = "diego.medici@cgm.com";
+                        oldLink.Created = DateTime.Now.ToString("yyyy-MM-ddThh:mm:ss+0000");
+                        oldLink.Body = string.Format("Original {0} {1}", type, emailAddress);
+                        CommentsBody.Add(oldLink);
+                    }
+                }
+                else
+                {
+                    newEmail = emailAddress.Replace("@studiofarma.it", "@cgm.com");
                 }
             }
-            else
-            {
-                newEmail = emailAddress.Replace("@studiofarma.it", "@cgm.com");
-            }
-
             return newEmail;
         }
 
@@ -211,6 +232,7 @@ namespace JIRAMigration.Classes.Export
             var listNameSplitted = new List<string>(attach.content.Split('/'));
             string fileName = listNameSplitted[listNameSplitted.Count - 1];
             fileName = HttpUtility.UrlDecode(fileName);
+            fileName = fileName.Replace(' ', '_');
             string fileCode = listNameSplitted[listNameSplitted.Count - 2];
             fullPathName += fileCode;
             FileInfo file = new FileInfo(fullPathName);
@@ -246,6 +268,8 @@ namespace JIRAMigration.Classes.Export
         public string CostUnit { get; set; }
         public string Priority { get; set; }
         public string EpicName { get; set; }
+        public string EpicLink { get; set; }
+        public string EpicLinkKey { get; set; }
         public string AcceptanceCriteria { get; set; }
         public string ChangeLog { get; set; }
         public string Resolution { get; set; }
@@ -274,6 +298,7 @@ namespace JIRAMigration.Classes.Export
             str.Append(string.Format("\"{0}\";", CostUnit));
             str.Append(string.Format("\"{0}\";", Priority));
             str.Append(string.Format("\"{0}\";", EpicName));
+            str.Append(string.Format("\"{0}\";", EpicLink));
             str.Append(AppendString(AffectVersion, maxAffVer));
             //str.Append(string.Format("\"{0}\";", Attachments+";");
             str.Append(AppendString(Components, maxComponent));

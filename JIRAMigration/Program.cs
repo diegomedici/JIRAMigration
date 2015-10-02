@@ -23,14 +23,23 @@ namespace JIRAMigration
     {
         private const string UserName = "diego.medici";
         private static string _password = string.Empty;
-        private const string Projects = "WEBDPC";
-        private const string DestProject = "DPC";
+        //private const string Projects = "WEBDPC";
+        //private const string DestProject = "DPC";
+
+        //private const string Projects = "SCA";
+        //private const string DestProject = "SCA";
+
+        //private const string Projects = "WBC";
+        //private const string DestProject = "WBC";
 
         //private const string Projects = "ATT";
         //private const string DestProject = "ATT";
 
-        //private const string Projects = "ATT,ESTAT,GIANO,LRX,SWAT,ZEN";
-        //private const string DestProject = "SWAT";
+        //private const string Projects = "ESTAT";
+        //private const string DestProject = "ESTAT";
+
+        private const string Projects = "ATT,ESTAT,GIANO,LRX,SWAT,ZEN";
+        private const string DestProject = "SWAT";
 
         static void Main(string[] args)
         {
@@ -55,12 +64,12 @@ namespace JIRAMigration
                     {
                          IssueSTF issueStf = GetIssueSTF(locIssue.self);
 
-                        Console.Write("Reading {0}...", issueStf.key);
+                        //Console.Write("Reading {0}...", issueStf.key);
                         IssueCGM issueCgm = new IssueCGM(issueStf, project, DestProject);
 
                         issueCgms.Add(issueCgm);
 
-                        Console.WriteLine(" done!");
+                        //Console.WriteLine(" done!");
 
                     }
 
@@ -69,6 +78,15 @@ namespace JIRAMigration
                         if (IssueCGM.Maps.ContainsKey(issue.OriginalParentIssueKey))
                         {
                             issue.DestinationParentIssueKey = IssueCGM.Maps[issue.OriginalParentIssueKey];
+                        }
+                    }
+
+
+                    foreach (IssueCGM issue in IssueCGM.EpicsToLink)
+                    {
+                        if (IssueCGM.MapsEpics.ContainsKey(issue.EpicLinkKey))
+                        {
+                            issue.EpicLink = IssueCGM.MapsEpics[issue.EpicLinkKey];
                         }
                     }
                 }
@@ -87,6 +105,7 @@ namespace JIRAMigration
                 {
                     lines[i++] = issueCgm.ToCSV(issueCgms.MaxCountLabel(), issueCgms.MaxCountAffcectVersion(),
                         issueCgms.MaxCountComponent(), issueCgms.MaxCountFixVersion(), issueCgms.MaxCountComments(), issueCgms.MaxCountAttachments());
+                    Console.WriteLine("Lines {0} Ok", i);
                 }
                 const string nameFileCsv = @"C:\CGM\" + DestProject + ".csv";
                 Console.WriteLine("Writing file {0}", nameFileCsv);
