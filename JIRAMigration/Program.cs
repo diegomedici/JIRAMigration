@@ -32,14 +32,14 @@ namespace JIRAMigration
         //private const string Projects = "WBC";
         //private const string DestProject = "WBC";
 
-        //private const string Projects = "ATT";
-        //private const string DestProject = "ATT";
+        private const string Projects = "ATT";
+        private const string DestProject = "ATT";
 
         //private const string Projects = "ESTAT";
         //private const string DestProject = "ESTAT";
 
-        private const string Projects = "ATT,ESTAT,GIANO,LRX,SWAT,ZEN";
-        private const string DestProject = "SWAT";
+        //private const string Projects = "ATT,ESTAT,GIANO,LRX,SWAT,ZEN";
+        //private const string DestProject = "SWAT";
 
         static void Main(string[] args)
         {
@@ -54,7 +54,7 @@ namespace JIRAMigration
 
                 string[] elencoProject = Projects.Split(',');
                 ListIssueCGM issueCgms = new ListIssueCGM();
-
+                int epicPosition = 0; //permette di inserire le epic prima delle issue e di mantenere per lo meno l'ordine tra di loro!
                 foreach (var project in elencoProject)
                 {
 
@@ -64,13 +64,18 @@ namespace JIRAMigration
                     {
                          IssueSTF issueStf = GetIssueSTF(locIssue.self);
 
-                        //Console.Write("Reading {0}...", issueStf.key);
                         IssueCGM issueCgm = new IssueCGM(issueStf, project, DestProject);
 
-                        issueCgms.Add(issueCgm);
-
-                        //Console.WriteLine(" done!");
-
+                        if (issueCgm.IssueType.Equals("Epic"))
+                        {
+                            issueCgms.Insert(epicPosition, issueCgm);
+                            epicPosition++;
+                        }
+                        else
+                        {
+                            issueCgms.Add(issueCgm);
+                        }
+                        
                     }
 
                     foreach(IssueCGM issue in IssueCGM.IssueToDo)
@@ -90,14 +95,7 @@ namespace JIRAMigration
                         }
                     }
                 }
-
-                //if (args[0] != null && !string.IsNullOrEmpty(args[0]))
-                //{
-                //    Issue issue = issues.SingleOrDefault(j => j.key == args[0]);
-                //    IssueSTF issueStf = GetIssueSTF(issue.self);
-                //}
-               
-
+                
                 string[] lines = new string[issueCgms.Count + 1];
                 lines[0] = issueCgms.FirstLine();
                 int i = 1;
@@ -116,6 +114,7 @@ namespace JIRAMigration
             {
                 
                 Console.WriteLine(e.Message);
+                Console.WriteLine(e.StackTrace);
             }
 
             Console.ReadLine();

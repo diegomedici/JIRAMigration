@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using RestSharp.Contrib;
 
 namespace JIRAMigration.Classes.Export
@@ -74,8 +75,21 @@ namespace JIRAMigration.Classes.Export
                 }
             }
 
-            IssueType = issue.fields.issuetype.name == "Non-Dev Task" ? "Task" : issue.fields.issuetype.name;
-            
+            switch (issue.fields.issuetype.name)
+            {
+                case "Non-Dev Task":
+                    IssueType = "Task";
+                    Labels.Add("Non-Dev Task");
+                    break;
+                case "Improvement":
+                    IssueType = "Task";
+                    Labels.Add("Improvement");
+                    break;
+                default:
+                    IssueType = issue.fields.issuetype.name;
+                    break;
+            }
+
             if (issue.fields.reporter != null)
             {
                 Reporter = EmailChanger(issue.fields.reporter.emailAddress, "reporter");
@@ -199,7 +213,7 @@ namespace JIRAMigration.Classes.Export
 
         private string EmailChanger(string emailAddress, string type)
         {
-            string[] oldEmails = { "federico.rota@studiofarma.it", "nicola.febbrari@studiofarma.it", "gabriele.bonzi@studiofarma.it" };
+            string[] oldEmails = { "federico.rota@studiofarma.it", "nicola.febbrari@studiofarma.it", "gabriele.bonzi@studiofarma.it", "tiziana.pizzocaro@sca.com" };
             string newEmail = string.Empty;
             if (emailAddress != null)
             {
@@ -211,7 +225,7 @@ namespace JIRAMigration.Classes.Export
                         CommentCgm oldLink = new CommentCgm();
                         oldLink.Author = "diego.medici@cgm.com";
                         oldLink.Created = DateTime.Now.ToString("yyyy-MM-ddThh:mm:ss+0000");
-                        oldLink.Body = string.Format("Original {0} {1}", type, emailAddress);
+                        oldLink.Body = $"Original {type} {emailAddress}";
                         CommentsBody.Add(oldLink);
                     }
                 }
@@ -225,14 +239,20 @@ namespace JIRAMigration.Classes.Export
 
         public const string DestinationDir = @"C:\CGM\attachments\";
 
+        public string RemoveSpecialChars(string input)
+        {
+            return Regex.Replace(input, @"[^0-9a-zA-Z.]", "_");
+        }
+
         private string CopyFile(string project, string destProject, Attachment attach)
         {
-            string fullPathName = @"C:\CGM\JIRA-backup\data\attachments\" + project + @"\10000\" +
-                                  OriginalIssueKey + @"\";
+            string fullPathName = $@"C:\CGM\JIRA-backup\data\attachments\{project}\10000\{OriginalIssueKey}\";
+
             var listNameSplitted = new List<string>(attach.content.Split('/'));
             string fileName = listNameSplitted[listNameSplitted.Count - 1];
             fileName = HttpUtility.UrlDecode(fileName);
             fileName = fileName.Replace(' ', '_');
+            fileName = RemoveSpecialChars(fileName);
             string fileCode = listNameSplitted[listNameSplitted.Count - 2];
             fullPathName += fileCode;
             FileInfo file = new FileInfo(fullPathName);
@@ -283,28 +303,28 @@ namespace JIRAMigration.Classes.Export
         public string ToCSV(int maxLabels, int maxAffVer, int maxComponent, int maxFixVer, int maxComment, int maxAttachment)
         {
             StringBuilder str = new StringBuilder();
-            str.Append(string.Format("{0};", DestinationIssueKey));
-            str.Append(string.Format("{0};", DestinationParentIssueKey));
-            str.Append(string.Format("\"{0}\";", IssueType));
-            str.Append(string.Format("\"{0}\";", Reporter));
-            str.Append(string.Format("\"{0}\";", FormatDate(DateCreated)));
-            str.Append(string.Format("\"{0}\";", string.IsNullOrEmpty(Summary) ? string.Empty : Summary.Replace('\"', '\'')));
+            str.Append($"{DestinationIssueKey};");
+            str.Append($"{DestinationParentIssueKey};");
+            str.Append($"\"{IssueType}\";");
+            str.Append($"\"{Reporter}\";");
+            str.Append($"\"{FormatDate(DateCreated)}\";");
+            str.Append($"\"{(string.IsNullOrEmpty(Summary) ? string.Empty : Summary.Replace('\"', '\''))}\";");
             str.Append(AppendString(Labels, maxLabels));
-            str.Append(string.Format("\"{0}\";", Assignee));
+            str.Append($"\"{Assignee}\";");
             //str.Append(string.Format("\"{0}\";", Descripton.Replace("\r\n", "$")));
-            str.Append(string.Format("\"{0}\";", string.IsNullOrEmpty(Descripton) ? string.Empty : Descripton.Replace('\"', '\'')));
+            str.Append($"\"{(string.IsNullOrEmpty(Descripton) ? string.Empty : Descripton.Replace('\"', '\''))}\";");
             //str.Append(string.Format("\"{0}\";", AcceptanceCriteria));
-            str.Append(string.Format("\"{0}\";", string.IsNullOrEmpty(ChangeLog) ? string.Empty : ChangeLog.Replace('\"', '\'')));
-            str.Append(string.Format("\"{0}\";", CostUnit));
-            str.Append(string.Format("\"{0}\";", Priority));
-            str.Append(string.Format("\"{0}\";", EpicName));
-            str.Append(string.Format("\"{0}\";", EpicLink));
+            str.Append($"\"{(string.IsNullOrEmpty(ChangeLog) ? string.Empty : ChangeLog.Replace('\"', '\''))}\";");
+            str.Append($"\"{CostUnit}\";");
+            str.Append($"\"{Priority}\";");
+            str.Append($"\"{EpicName}\";");
+            str.Append($"\"{EpicLink}\";");
             str.Append(AppendString(AffectVersion, maxAffVer));
             //str.Append(string.Format("\"{0}\";", Attachments+";");
             str.Append(AppendString(Components, maxComponent));
             str.Append(AppendString(FixVersion, maxFixVer));
-            str.Append(string.Format("\"{0}\";", Status));
-            str.Append(string.Format("\"{0}\";", Resolution));
+            str.Append($"\"{Status}\";");
+            str.Append($"\"{Resolution}\";");
             str.Append(AppendComments(CommentsBody, maxComment));
             str.Append(AppendAttachment(Attachments, maxAttachment));
             return str.ToString();
@@ -326,7 +346,8 @@ namespace JIRAMigration.Classes.Export
                 if (i >= commentsBody.Count)
                     str = str + ";";
                 else
-                    str = str + string.Format("\"{0};{1};{2}\";", FormatDate(commentsBody[i].Created), EmailChanger(commentsBody[i].Author, ""), commentsBody[i].Body.Replace('\"', '\''));
+                    str = str +
+                          $"\"{FormatDate(commentsBody[i].Created)};{EmailChanger(commentsBody[i].Author, "")};{commentsBody[i].Body.Replace('\"', '\'')}\";";
             }
 
             return str;
@@ -340,7 +361,7 @@ namespace JIRAMigration.Classes.Export
                 if (i >= list.Count)
                     str = str + ";";
                 else
-                    str = str + string.Format("\"{0}\";", list[i]);
+                    str = str + $"\"{list[i]}\";";
             }
 
             return str;
@@ -355,7 +376,7 @@ namespace JIRAMigration.Classes.Export
                 if (i >= list.Count)
                     str = str + ";";
                 else
-                    str = str + string.Format("\"file://{0}\";", list[i].Replace("\\", "/"));
+                    str = str + $"\"file://{list[i].Replace("\\", "/")}\";";
             }
 
             return str;
